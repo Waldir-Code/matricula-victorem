@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soporte IT | Víctorem Impulsa Cloud</title>
+    <title>Víctorem Impulsa | Gestión Cloud Optimizada</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -18,7 +18,7 @@
         body {
             background: radial-gradient(circle at top, #111827, var(--bg));
             color: white;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -37,11 +37,10 @@
             border: 1px solid rgba(59, 130, 246, 0.3);
             text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         h1 { color: var(--primary); margin: 0; font-size: 1.6rem; letter-spacing: 1px; }
-        .subtitle { opacity: 0.6; font-size: 0.8rem; margin-bottom: 20px; }
 
         input {
             width: 100%;
@@ -53,10 +52,7 @@
             color: white;
             box-sizing: border-box;
             outline: none;
-            transition: 0.3s;
         }
-
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
         .btn-main {
             width: 100%;
@@ -72,57 +68,43 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
-        .btn-main:hover { background: #2563eb; transform: translateY(-2px); }
+        .btn-main:active { transform: scale(0.98); }
 
-        .refresh-area {
+        .header-lista {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
+            margin: 10px 5px;
             font-size: 0.9rem;
         }
 
-        #listaAlumnos { width: 100%; }
-
         .alumno-item {
             background: var(--card);
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-left: 4px solid var(--primary);
-            transition: 0.3s;
+            animation: fadeIn 0.3s ease;
         }
 
-        .alumno-item:hover { background: rgba(255,255,255,0.1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .alumno-info b { display: block; text-transform: uppercase; font-size: 0.95rem; }
-        .alumno-info span { font-size: 0.8rem; opacity: 0.6; }
+        .alumno-info b { display: block; text-transform: uppercase; font-size: 0.9rem; color: #fff; }
+        .alumno-info span { font-size: 0.75rem; opacity: 0.6; }
 
         .actions { display: flex; gap: 8px; }
-
-        .btn-icon {
-            padding: 8px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-            color: white;
-        }
-
+        .btn-icon { padding: 8px; border-radius: 8px; border: none; cursor: pointer; color: white; transition: 0.2s; }
         .btn-edit { background: var(--warning); color: #000; }
         .btn-delete { background: var(--danger); }
-        .btn-icon:hover { opacity: 0.8; transform: scale(1.1); }
 
-        #msg { color: var(--success); font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
-
-        /* Loader */
-        .spinner { animation: spin 1s linear infinite; }
+        #status-msg { font-size: 0.8rem; color: var(--success); }
+        .loading-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -131,18 +113,18 @@
 <div class="container">
     <div class="card">
         <h1>VÍCTOREM IMPULSA</h1>
-        <p class="subtitle">IT DEPT - GESTIÓN DE MATRÍCULAS</p>
+        <p style="opacity:0.5; font-size:0.7rem; margin-bottom:15px;">SISTEMA DE MATRÍCULA CLOUD v2.0</p>
         
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <input type="text" id="dni" placeholder="Documento DNI">
+        <input type="text" id="nombre" placeholder="Nombre del Alumno">
+        <input type="text" id="dni" placeholder="DNI">
         
-        <button class="btn-main" onclick="enviarDatos()">
+        <button class="btn-main" id="btnGuardar" onclick="enviarDatos()">
             <i class="fas fa-save"></i> GUARDAR REGISTRO
         </button>
 
-        <div class="refresh-area">
-            <span id="msg">Sistema listo</span>
-            <i class="fas fa-sync-alt" onclick="consultarAlumnos()" style="cursor:pointer; color: var(--primary);"></i>
+        <div class="header-lista">
+            <span id="status-msg">Sincronizado</span>
+            <i class="fas fa-sync-alt" id="sync-icon" onclick="consultarAlumnos()" style="cursor:pointer; color: var(--primary);"></i>
         </div>
     </div>
 
@@ -151,18 +133,24 @@
 </div>
 
 <script>
-    // 1. REEMPLAZA ESTA URL CON TU URL DE APP WEB (LA QUE TERMINA EN /exec)
-    const MI_URL = "https://script.google.com/macros/s/AKfycbzScMRkhAPZ5zSSuF98OsjHfj2OFSV_ddcemvy4fcCWbEqFwZStEHkPxkPQ3wrCuIjc/exec";
+    // 1. TU URL DE GOOGLE (Asegúrate que sea la última versión implementada)
+    const MI_URL = "https://script.google.com/macros/s/AKfycbzScMRkhAPZ5zSSuF98OsjHfj2OFSV_ddcemvy4fcCWbEqFwZStEHkPxkPQ3wrCuljc/exec";
 
-    // GUARDAR O EDITAR (Soporta ambas acciones)
+    // CARGA INICIAL: Usar memoria local para que sea instantáneo
+    window.onload = () => {
+        const cache = localStorage.getItem('victorem_data');
+        if (cache) {
+            renderizarLista(JSON.parse(cache));
+        }
+        consultarAlumnos(); // Luego busca datos frescos en segundo plano
+    };
+
     async function enviarDatos() {
         const nom = document.getElementById('nombre').value;
         const dni = document.getElementById('dni').value;
-        const msg = document.getElementById('msg');
+        if(!nom || !dni) return alert("Completa los datos");
 
-        if(!nom || !dni) return alert("Llena los campos");
-
-        msg.innerHTML = '<i class="fas fa-spinner spinner"></i> Procesando...';
+        setLoading(true, "Guardando...");
 
         try {
             await fetch(MI_URL, {
@@ -170,99 +158,84 @@
                 mode: 'no-cors',
                 body: JSON.stringify({ nombre: nom, dni: dni })
             });
-
-            msg.innerText = "✅ Registro exitoso";
             document.getElementById('nombre').value = "";
             document.getElementById('dni').value = "";
+            // Pequeña pausa para que Google procese y recargamos
             setTimeout(consultarAlumnos, 1500);
         } catch (e) {
-            msg.innerText = "❌ Error de conexión";
+            alert("Error de conexión");
+            setLoading(false);
         }
     }
 
-    // ELIMINAR
-    async function eliminarAlumno(dni) {
-        if(!confirm("¿Deseas eliminar a este alumno de la base de datos?")) return;
-        
-        const msg = document.getElementById('msg');
-        msg.innerText = "Eliminando...";
-
-        try {
-            await fetch(MI_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "delete", dni: dni })
-            });
-            setTimeout(consultarAlumnos, 1000);
-            msg.innerText = "✅ Registro borrado";
-        } catch (e) { alert("Error al eliminar"); }
-    }
-
-    // EDITAR (Usa el mismo doPost con acción "edit")
-    async function editarAlumno(nombreActual, dniActual) {
-        const nuevoNombre = prompt("Modificar Nombre:", nombreActual);
-        const nuevoDni = prompt("Modificar DNI:", dniActual);
-
-        if (nuevoNombre && nuevoDni) {
-            const msg = document.getElementById('msg');
-            msg.innerText = "Actualizando...";
-
-            try {
-                await fetch(MI_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ 
-                        action: "edit", 
-                        dniAntiguo: dniActual, 
-                        nombreNuevo: nuevoNombre, 
-                        dniNuevo: nuevoDni 
-                    })
-                });
-                setTimeout(consultarAlumnos, 1000);
-                msg.innerText = "✅ Datos actualizados";
-            } catch (e) { alert("Error al editar"); }
-        }
-    }
-
-    // VISUALIZAR LISTA
     async function consultarAlumnos() {
-        const contenedor = document.getElementById('listaAlumnos');
-        contenedor.innerHTML = '<p style="text-align:center; opacity:0.5;">Sincronizando con Cloud...</p>';
+        const icon = document.getElementById('sync-icon');
+        const msg = document.getElementById('status-msg');
+        icon.classList.add('loading-spin');
+        msg.innerText = "Actualizando...";
 
         try {
             const res = await fetch(MI_URL + "?t=" + new Date().getTime());
             const datos = await res.json();
-            contenedor.innerHTML = "";
-
-            if(datos.length === 0) {
-                contenedor.innerHTML = '<p style="text-align:center; opacity:0.3;">No hay registros en el Sheet.</p>';
-                return;
-            }
-
-            datos.reverse().forEach(a => {
-                contenedor.innerHTML += `
-                    <div class="alumno-item">
-                        <div class="alumno-info">
-                            <b>${a.nombre}</b>
-                            <span><i class="far fa-id-card"></i> DNI: ${a.dni}</span>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-icon btn-edit" onclick="editarAlumno('${a.nombre}', '${a.dni}')">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="btn-icon btn-delete" onclick="eliminarAlumno('${a.dni}')">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>`;
-            });
+            
+            // Guardar en memoria para la próxima vez
+            localStorage.setItem('victorem_data', JSON.stringify(datos));
+            renderizarLista(datos);
+            
+            msg.innerText = "Sincronizado";
         } catch (e) {
-            contenedor.innerHTML = '<p style="color:var(--danger); text-align:center;">Error de sincronización</p>';
+            msg.innerText = "Modo Offline";
+        } finally {
+            icon.classList.remove('loading-spin');
+            setLoading(false);
         }
     }
 
-    // Carga inicial
-    window.onload = consultarAlumnos;
+    function renderizarLista(datos) {
+        const contenedor = document.getElementById('listaAlumnos');
+        contenedor.innerHTML = "";
+        
+        // OPTIMIZACIÓN: Solo mostramos los últimos 50 para no colapsar el celular
+        // El resto sigue en el Excel por seguridad.
+        datos.reverse().slice(0, 50).forEach(a => {
+            contenedor.innerHTML += `
+                <div class="alumno-item">
+                    <div class="alumno-info">
+                        <b>${a.nombre}</b>
+                        <span>DNI: ${a.dni}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-icon btn-edit" onclick="editarAlumno('${a.nombre}', '${a.dni}')"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icon btn-delete" onclick="eliminarAlumno('${a.dni}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    async function eliminarAlumno(dni) {
+        if(!confirm("¿Eliminar registro?")) return;
+        setLoading(true, "Borrando...");
+        await fetch(MI_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", dni: dni }) });
+        setTimeout(consultarAlumnos, 1000);
+    }
+
+    async function editarAlumno(n, d) {
+        const nuevoN = prompt("Nuevo nombre:", n);
+        const nuevoD = prompt("Nuevo DNI:", d);
+        if(nuevoN && nuevoD) {
+            setLoading(true, "Editando...");
+            await fetch(MI_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "edit", dniAntiguo: d, nombreNuevo: nuevoN, dniNuevo: nuevoD }) });
+            setTimeout(consultarAlumnos, 1000);
+        }
+    }
+
+    function setLoading(estado, texto = "Guardar Registro") {
+        const btn = document.getElementById('btnGuardar');
+        const msg = document.getElementById('status-msg');
+        btn.disabled = estado;
+        btn.innerHTML = estado ? `<i class="fas fa-spinner loading-spin"></i> ${texto}` : `<i class="fas fa-save"></i> GUARDAR REGISTRO`;
+        if(estado) msg.innerText = texto;
+    }
 </script>
 
 </body>
