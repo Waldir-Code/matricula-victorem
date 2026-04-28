@@ -3,240 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Víctorem Impulsa | Gestión Cloud Optimizada</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Víctorem Impulsa | Control de Matrículas</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+
     <style>
-        :root {
-            --primary: #3b82f6;
-            --danger: #ef4444;
-            --warning: #fbbf24;
-            --success: #10b981;
-            --bg: #070E1C;
-            --card: rgba(255, 255, 255, 0.05);
-        }
-
-        body {
-            background: radial-gradient(circle at top, #111827, var(--bg));
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container { width: 100%; max-width: 450px; }
-
-        .card {
-            background: var(--card);
-            backdrop-filter: blur(10px);
-            padding: 25px;
-            border-radius: 20px;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-
-        h1 { color: var(--primary); margin: 0; font-size: 1.6rem; letter-spacing: 1px; }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 10px;
-            border: 1px solid #1e293b;
-            background: #0f172a;
-            color: white;
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        .btn-main {
-            width: 100%;
-            padding: 14px;
-            margin-top: 10px;
-            border-radius: 10px;
-            border: none;
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: 0.2s;
-        }
-
-        .btn-main:active { transform: scale(0.98); }
-
-        .header-lista {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 5px;
-            font-size: 0.9rem;
-        }
-
-        .alumno-item {
-            background: var(--card);
-            padding: 12px 15px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid var(--primary);
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .alumno-info b { display: block; text-transform: uppercase; font-size: 0.9rem; color: #fff; }
-        .alumno-info span { font-size: 0.75rem; opacity: 0.6; }
-
-        .actions { display: flex; gap: 8px; }
-        .btn-icon { padding: 8px; border-radius: 8px; border: none; cursor: pointer; color: white; transition: 0.2s; }
-        .btn-edit { background: var(--warning); color: #000; }
-        .btn-delete { background: var(--danger); }
-
-        #status-msg { font-size: 0.8rem; color: var(--success); }
-        .loading-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        h2 { color: var(--primary); text-align: center; margin-top: 0; letter-spacing: 1px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #2563eb; transform: scale(1.02); }
+        #lista { width: 100%; max-width: 400px; margin-top: 30px; }
+        .alumno { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .alumno b { display: block; font-size: 1rem; color: #f8fafc; }
+        .alumno small { color: #94a3b8; }
+        .badge { background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
     <div class="card">
-        <h1>VÍCTOREM IMPULSA</h1>
-        <p style="opacity:0.5; font-size:0.7rem; margin-bottom:15px;">SISTEMA DE MATRÍCULA CLOUD v2.0</p>
+        <h2>VÍCTOREM IMPULSA</h2>
+        <p style="text-align:center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 20px;">SISTEMA CLOUD EN TIEMPO REAL</p>
         
-        <input type="text" id="nombre" placeholder="Nombre del Alumno">
-        <input type="text" id="dni" placeholder="DNI">
-        
-        <button class="btn-main" id="btnGuardar" onclick="enviarDatos()">
-            <i class="fas fa-save"></i> GUARDAR REGISTRO
-        </button>
-
-        <div class="header-lista">
-            <span id="status-msg">Sincronizado</span>
-            <i class="fas fa-sync-alt" id="sync-icon" onclick="consultarAlumnos()" style="cursor:pointer; color: var(--primary);"></i>
-        </div>
+        <input type="text" id="nombre" placeholder="Nombre completo del alumno">
+        <input type="text" id="dni" placeholder="Número de DNI">
+        <button onclick="guardar()">REGISTRAR MATRÍCULA</button>
     </div>
 
-    <div id="listaAlumnos">
-        </div>
-</div>
+    <div id="lista">
+        <p style="text-align:center; opacity:0.5;">Cargando registros...</p>
+    </div>
 
-<script>
-    // 1. TU URL DE GOOGLE (Asegúrate que sea la última versión implementada)
-    const MI_URL = "https://script.google.com/macros/s/AKfycbzScMRkhAPZ5zSSuF98OsjHfj2OFSV_ddcemvy4fcCWbEqFwZStEHkPxkPQ3wrCuljc/exec";
+    <script>
+        // CONFIGURACIÓN CON TUS DATOS REALES
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKWiAnPmIenRrPM8gm-i0bs4SPlWtrmSk",
+            authDomain: "victorem-cloud.firebaseapp.com",
+            projectId: "victorem-cloud",
+            storageBucket: "victorem-cloud.firebasestorage.app",
+            messagingSenderId: "256853253245",
+            appId: "1:256853253245:web:30e4d2e0b861fea59c6514",
+            measurementId: "G-G3LWNNBNDK",
+            // IMPORTANTE: Esta URL es necesaria para la base de datos
+            databaseURL: "https://victorem-cloud-default-rtdb.firebaseio.com" 
+        };
 
-    // CARGA INICIAL: Usar memoria local para que sea instantáneo
-    window.onload = () => {
-        const cache = localStorage.getItem('victorem_data');
-        if (cache) {
-            renderizarLista(JSON.parse(cache));
-        }
-        consultarAlumnos(); // Luego busca datos frescos en segundo plano
-    };
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    async function enviarDatos() {
-        const nom = document.getElementById('nombre').value;
-        const dni = document.getElementById('dni').value;
-        if(!nom || !dni) return alert("Completa los datos");
+        // Función para Guardar Alumnos
+        function guardar() {
+            const nom = document.getElementById('nombre').value;
+            const d = document.getElementById('dni').value;
+            
+            if(nom.trim() === "" || d.trim() === "") {
+                return alert("Por favor, llena ambos campos");
+            }
 
-        setLoading(true, "Guardando...");
-
-        try {
-            await fetch(MI_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ nombre: nom, dni: dni })
+            db.ref('alumnos/').push({
+                nombre: nom,
+                dni: d,
+                fecha: new Date().toLocaleString()
+            }).then(() => {
+                // Limpiar campos después de guardar
+                document.getElementById('nombre').value = "";
+                document.getElementById('dni').value = "";
+            }).catch((error) => {
+                alert("Error al guardar: " + error.message);
             });
-            document.getElementById('nombre').value = "";
-            document.getElementById('dni').value = "";
-            // Pequeña pausa para que Google procese y recargamos
-            setTimeout(consultarAlumnos, 1500);
-        } catch (e) {
-            alert("Error de conexión");
-            setLoading(false);
         }
-    }
 
-    async function consultarAlumnos() {
-        const icon = document.getElementById('sync-icon');
-        const msg = document.getElementById('status-msg');
-        icon.classList.add('loading-spin');
-        msg.innerText = "Actualizando...";
-
-        try {
-            const res = await fetch(MI_URL + "?t=" + new Date().getTime());
-            const datos = await res.json();
+        // Leer datos en TIEMPO REAL
+        db.ref('alumnos/').on('value', (snapshot) => {
+            const contenedor = document.getElementById('lista');
+            contenedor.innerHTML = "<h3 style='font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;'>ALUMNOS MATRICULADOS:</h3>";
             
-            // Guardar en memoria para la próxima vez
-            localStorage.setItem('victorem_data', JSON.stringify(datos));
-            renderizarLista(datos);
-            
-            msg.innerText = "Sincronizado";
-        } catch (e) {
-            msg.innerText = "Modo Offline";
-        } finally {
-            icon.classList.remove('loading-spin');
-            setLoading(false);
-        }
-    }
+            if (!snapshot.exists()) {
+                contenedor.innerHTML += "<p style='text-align:center; opacity:0.5;'>No hay registros aún.</p>";
+                return;
+            }
 
-    function renderizarLista(datos) {
-        const contenedor = document.getElementById('listaAlumnos');
-        contenedor.innerHTML = "";
-        
-        // OPTIMIZACIÓN: Solo mostramos los últimos 50 para no colapsar el celular
-        // El resto sigue en el Excel por seguridad.
-        datos.reverse().slice(0, 50).forEach(a => {
-            contenedor.innerHTML += `
-                <div class="alumno-item">
-                    <div class="alumno-info">
-                        <b>${a.nombre}</b>
-                        <span>DNI: ${a.dni}</span>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-icon btn-edit" onclick="editarAlumno('${a.nombre}', '${a.dni}')"><i class="fas fa-pen"></i></button>
-                        <button class="btn-icon btn-delete" onclick="eliminarAlumno('${a.dni}')"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>`;
+            snapshot.forEach((hijo) => {
+                const data = hijo.val();
+                contenedor.innerHTML += `
+                    <div class="alumno">
+                        <div>
+                            <b>${data.nombre}</b>
+                            <small>DNI: ${data.dni}</small>
+                        </div>
+                        <span class="badge">ACTIVO</span>
+                    </div>`;
+            });
         });
-    }
-
-    async function eliminarAlumno(dni) {
-        if(!confirm("¿Eliminar registro?")) return;
-        setLoading(true, "Borrando...");
-        await fetch(MI_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", dni: dni }) });
-        setTimeout(consultarAlumnos, 1000);
-    }
-
-    async function editarAlumno(n, d) {
-        const nuevoN = prompt("Nuevo nombre:", n);
-        const nuevoD = prompt("Nuevo DNI:", d);
-        if(nuevoN && nuevoD) {
-            setLoading(true, "Editando...");
-            await fetch(MI_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "edit", dniAntiguo: d, nombreNuevo: nuevoN, dniNuevo: nuevoD }) });
-            setTimeout(consultarAlumnos, 1000);
-        }
-    }
-
-    function setLoading(estado, texto = "Guardar Registro") {
-        const btn = document.getElementById('btnGuardar');
-        const msg = document.getElementById('status-msg');
-        btn.disabled = estado;
-        btn.innerHTML = estado ? `<i class="fas fa-spinner loading-spin"></i> ${texto}` : `<i class="fas fa-save"></i> GUARDAR REGISTRO`;
-        if(estado) msg.innerText = texto;
-    }
-</script>
-
+    </script>
 </body>
 </html>
