@@ -3,44 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Víctorem Impulsa | Control de Matrículas</title>
-    
+    <title>Víctorem Impulsa | Gestión Cloud</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
-
     <style>
-        :root { --primary: #3b82f6; --bg: #0f172a; --card: #1e293b; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .card { background: var(--card); padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
-        h2 { color: var(--primary); text-align: center; margin-top: 0; letter-spacing: 1px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--primary); }
-        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #2563eb; transform: scale(1.02); }
-        #lista { width: 100%; max-width: 400px; margin-top: 30px; }
-        .alumno { background: var(--card); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        .alumno b { display: block; font-size: 1rem; color: #f8fafc; }
-        .alumno small { color: #94a3b8; }
-        .badge { background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: bold; }
+        :root { --primary: #3b82f6; --danger: #ef4444; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid #334155; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        #lista { width: 100%; max-width: 450px; margin-top: 20px; }
+        .alumno { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .btn-delete { background: var(--danger); width: auto; padding: 5px 10px; font-size: 0.8rem; margin-left: 5px; }
+        .btn-edit { background: #eab308; width: auto; padding: 5px 10px; font-size: 0.8rem; }
+        .acciones { display: flex; gap: 5px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>VÍCTOREM IMPULSA</h2>
-        <p style="text-align:center; font-size: 0.8rem; opacity: 0.7; margin-bottom: 20px;">SISTEMA CLOUD EN TIEMPO REAL</p>
-        
-        <input type="text" id="nombre" placeholder="Nombre completo del alumno">
-        <input type="text" id="dni" placeholder="Número de DNI">
-        <button onclick="guardar()">REGISTRAR MATRÍCULA</button>
+        <h2 style="text-align:center; color:var(--primary)">VÍCTOREM IMPULSA</h2>
+        <input type="hidden" id="key"> <input type="text" id="nombre" placeholder="Nombre completo">
+        <input type="text" id="dni" placeholder="DNI">
+        <button id="btn-accion" onclick="guardar()">REGISTRAR ALUMNO</button>
     </div>
 
-    <div id="lista">
-        <p style="text-align:center; opacity:0.5;">Cargando registros...</p>
-    </div>
+    <div id="lista"></div>
 
     <script>
-        // CONFIGURACIÓN CON TUS DATOS REALES
         const firebaseConfig = {
             apiKey: "AIzaSyBKWiAnPmIenRrPM8gm-i0bs4SPlWtrmSk",
             authDomain: "victorem-cloud.firebaseapp.com",
@@ -48,56 +38,72 @@
             storageBucket: "victorem-cloud.firebasestorage.app",
             messagingSenderId: "256853253245",
             appId: "1:256853253245:web:30e4d2e0b861fea59c6514",
-            measurementId: "G-G3LWNNBNDK",
-            // ESTA LÍNEA ES LA QUE CONECTA CON TU IMAGEN:
             databaseURL: "https://victorem-cloud-default-rtdb.firebaseio.com" 
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Función para Guardar Alumnos
+        // GUARDAR O ACTUALIZAR
         function guardar() {
             const nom = document.getElementById('nombre').value;
             const d = document.getElementById('dni').value;
-            
-            if(nom.trim() === "" || d.trim() === "") {
-                return alert("Por favor, llena ambos campos");
-            }
+            const key = document.getElementById('key').value;
 
-            db.ref('alumnos/').push({
-                nombre: nom,
-                dni: d,
-                fecha: new Date().toLocaleString()
-            }).then(() => {
-                // Limpiar campos después de guardar
-                document.getElementById('nombre').value = "";
-                document.getElementById('dni').value = "";
-            }).catch((error) => {
-                alert("Error al guardar: " + error.message);
-            });
+            if(!nom || !d) return alert("Llena los campos");
+
+            if(key) {
+                // Si hay una key, ACTUALIZAMOS
+                db.ref('alumnos/' + key).update({ nombre: nom, dni: d });
+                resetForm();
+            } else {
+                // Si no hay key, CREAMOS NUEVO
+                db.ref('alumnos/').push({ nombre: nom, dni: d });
+                resetForm();
+            }
         }
 
-        // Leer datos en TIEMPO REAL
+        // ELIMINAR
+        function eliminar(key) {
+            if(confirm("¿Seguro que quieres eliminar este registro?")) {
+                db.ref('alumnos/' + key).remove();
+            }
+        }
+
+        // PREPARAR EDICIÓN
+        function prepararEdicion(key, nombre, dni) {
+            document.getElementById('nombre').value = nombre;
+            document.getElementById('dni').value = dni;
+            document.getElementById('key').value = key;
+            document.getElementById('btn-accion').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btn-accion').style.background = "#eab308";
+        }
+
+        function resetForm() {
+            document.getElementById('nombre').value = "";
+            document.getElementById('dni').value = "";
+            document.getElementById('key').value = "";
+            document.getElementById('btn-accion').innerText = "REGISTRAR ALUMNO";
+            document.getElementById('btn-accion').style.background = "#3b82f6";
+        }
+
+        // ESCUCHAR EN TIEMPO REAL
         db.ref('alumnos/').on('value', (snapshot) => {
             const contenedor = document.getElementById('lista');
-            contenedor.innerHTML = "<h3 style='font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;'>ALUMNOS MATRICULADOS:</h3>";
-            
-            if (!snapshot.exists()) {
-                contenedor.innerHTML += "<p style='text-align:center; opacity:0.5;'>No hay registros aún.</p>";
-                return;
-            }
-
+            contenedor.innerHTML = "";
             snapshot.forEach((hijo) => {
                 const data = hijo.val();
+                const id = hijo.key; // Esta es la "llave" única de Firebase
                 contenedor.innerHTML += `
                     <div class="alumno">
                         <div>
                             <b>${data.nombre}</b>
                             <small>DNI: ${data.dni}</small>
                         </div>
-                        <span class="badge">ACTIVO</span>
+                        <div class="acciones">
+                            <button class="btn-edit" onclick="prepararEdicion('${id}', '${data.nombre}', '${data.dni}')">Editar</button>
+                            <button class="btn-delete" onclick="eliminar('${id}')">Borrar</button>
+                        </div>
                     </div>`;
             });
         });
