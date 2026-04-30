@@ -3,106 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Víctorem Impulsa | Gestión Cloud</title>
+    <title>Víctorem Impulsa | Gestión Total</title>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #3b82f6; --danger: #ef4444; --bg: #0f172a; --card: #1e293b; }
+        :root { --primary: #3b82f6; --danger: #ef4444; --warning: #eab308; --bg: #0f172a; --card: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid #334155; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; border: 1px solid #334155; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
         input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        #lista { width: 100%; max-width: 450px; margin-top: 20px; }
-        .alumno { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        .btn-delete { background: var(--danger); width: auto; padding: 5px 10px; font-size: 0.8rem; margin-left: 5px; }
-        .btn-edit { background: #eab308; width: auto; padding: 5px 10px; font-size: 0.8rem; }
-        .acciones { display: flex; gap: 5px; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #lista { width: 100%; max-width: 450px; margin-top: 25px; }
+        .alumno { background: var(--card); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid #334155; }
+        .foto-perfil { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background: #334155; }
+        .info { flex-grow: 1; }
+        .btn-delete { background: var(--danger); padding: 5px 8px; font-size: 0.7rem; border-radius: 4px; border:none; color:white; cursor:pointer; }
+        .btn-edit { background: var(--warning); padding: 5px 8px; font-size: 0.7rem; border-radius: 4px; border:none; color:white; cursor:pointer; margin-right: 5px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2 style="text-align:center; color:var(--primary)">VÍCTOREM IMPULSA</h2>
-        <input type="hidden" id="key"> <input type="text" id="nombre" placeholder="Nombre completo">
+        <h2 style="text-align:center; color:var(--primary); margin-bottom: 5px;">VÍCTOREM IMPULSA</h2>
+        <p style="text-align:center; font-size: 0.7rem; opacity: 0.6; margin-bottom: 15px;">ADMINISTRACIÓN DE ALUMNOS</p>
+        
+        <input type="hidden" id="keyActual">
+        <input type="hidden" id="fotoActual">
+        <input type="text" id="nombre" placeholder="Nombre completo">
         <input type="text" id="dni" placeholder="DNI">
-        <button id="btn-accion" onclick="guardar()">REGISTRAR ALUMNO</button>
+        <label id="labelFoto" style="font-size: 0.75rem; color: #94a3b8;">Foto de perfil:</label>
+        <input type="file" id="fotoInput" accept="image/*">
+        
+        <button id="btn-main" onclick="procesar()">REGISTRAR ALUMNO</button>
+        <button id="btn-cancelar" onclick="resetForm()" style="display:none; background:#475569;">CANCELAR EDICIÓN</button>
     </div>
 
     <div id="lista"></div>
 
     <script>
+        // CONFIGURACIÓN DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyBKWiAnPmIenRrPM8gm-i0bs4SPlWtrmSk",
             authDomain: "victorem-cloud.firebaseapp.com",
             projectId: "victorem-cloud",
-            storageBucket: "victorem-cloud.firebasestorage.app",
-            messagingSenderId: "256853253245",
-            appId: "1:256853253245:web:30e4d2e0b861fea59c6514",
             databaseURL: "https://victorem-cloud-default-rtdb.firebaseio.com" 
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // GUARDAR O ACTUALIZAR
-        function guardar() {
+        // TU LLAVE DE IMGBB
+        const IMGBB_API_KEY = "5735c7ede402c847303187c374ceb0fe"; 
+
+        async function procesar() {
             const nom = document.getElementById('nombre').value;
             const d = document.getElementById('dni').value;
-            const key = document.getElementById('key').value;
+            const key = document.getElementById('keyActual').value;
+            const fotoExistente = document.getElementById('fotoActual').value;
+            const archivo = document.getElementById('fotoInput').files[0];
+            const btn = document.getElementById('btn-main');
 
-            if(!nom || !d) return alert("Llena los campos");
+            if(!nom || !d) return alert("Nombre y DNI son obligatorios");
+            
+            btn.innerText = "Procesando...";
+            btn.disabled = true;
+
+            let urlFoto = fotoExistente || "https://via.placeholder.com/150";
+
+            // Subida a ImgBB si hay archivo nuevo
+            if(archivo) {
+                const formData = new FormData();
+                formData.append("image", archivo);
+                try {
+                    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    const result = await response.json();
+                    urlFoto = result.data.url;
+                } catch (e) { alert("Error al subir imagen"); }
+            }
 
             if(key) {
-                // Si hay una key, ACTUALIZAMOS
-                db.ref('alumnos/' + key).update({ nombre: nom, dni: d });
-                resetForm();
+                // EDITAR EXISTENTE
+                db.ref('alumnos/' + key).update({ nombre: nom, dni: d, foto: urlFoto });
             } else {
-                // Si no hay key, CREAMOS NUEVO
-                db.ref('alumnos/').push({ nombre: nom, dni: d });
-                resetForm();
+                // REGISTRAR NUEVO
+                db.ref('alumnos/').push({ nombre: nom, dni: d, foto: urlFoto });
             }
+            resetForm();
         }
 
-        // ELIMINAR
-        function eliminar(key) {
-            if(confirm("¿Seguro que quieres eliminar este registro?")) {
-                db.ref('alumnos/' + key).remove();
-            }
-        }
-
-        // PREPARAR EDICIÓN
-        function prepararEdicion(key, nombre, dni) {
+        function prepararEdicion(id, nombre, dni, foto) {
+            document.getElementById('keyActual').value = id;
+            document.getElementById('fotoActual').value = foto;
             document.getElementById('nombre').value = nombre;
             document.getElementById('dni').value = dni;
-            document.getElementById('key').value = key;
-            document.getElementById('btn-accion').innerText = "ACTUALIZAR DATOS";
-            document.getElementById('btn-accion').style.background = "#eab308";
+            document.getElementById('btn-main').innerText = "ACTUALIZAR DATOS";
+            document.getElementById('btn-main').style.background = "var(--warning)";
+            document.getElementById('btn-cancelar').style.display = "block";
+            window.scrollTo(0,0);
         }
 
         function resetForm() {
+            document.getElementById('keyActual').value = "";
+            document.getElementById('fotoActual').value = "";
             document.getElementById('nombre').value = "";
             document.getElementById('dni').value = "";
-            document.getElementById('key').value = "";
-            document.getElementById('btn-accion').innerText = "REGISTRAR ALUMNO";
-            document.getElementById('btn-accion').style.background = "#3b82f6";
+            document.getElementById('fotoInput').value = "";
+            document.getElementById('btn-main').innerText = "REGISTRAR ALUMNO";
+            document.getElementById('btn-main').style.background = "var(--primary)";
+            document.getElementById('btn-cancelar').style.display = "none";
+            document.getElementById('btn-main').disabled = false;
         }
 
-        // ESCUCHAR EN TIEMPO REAL
         db.ref('alumnos/').on('value', (snapshot) => {
             const contenedor = document.getElementById('lista');
             contenedor.innerHTML = "";
             snapshot.forEach((hijo) => {
                 const data = hijo.val();
-                const id = hijo.key; // Esta es la "llave" única de Firebase
+                const id = hijo.key;
                 contenedor.innerHTML += `
                     <div class="alumno">
-                        <div>
+                        <img src="${data.foto}" class="foto-perfil">
+                        <div class="info">
                             <b>${data.nombre}</b>
                             <small>DNI: ${data.dni}</small>
                         </div>
-                        <div class="acciones">
-                            <button class="btn-edit" onclick="prepararEdicion('${id}', '${data.nombre}', '${data.dni}')">Editar</button>
-                            <button class="btn-delete" onclick="eliminar('${id}')">Borrar</button>
+                        <div>
+                            <button class="btn-edit" onclick="prepararEdicion('${id}', '${data.nombre}', '${data.dni}', '${data.foto}')">Edit</button>
+                            <button class="btn-delete" onclick="if(confirm('¿Eliminar?')) firebase.database().ref('alumnos/${id}').remove()">X</button>
                         </div>
                     </div>`;
             });
